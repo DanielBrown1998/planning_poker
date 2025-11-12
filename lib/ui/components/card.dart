@@ -9,6 +9,7 @@ class CardPoker extends StatefulWidget {
   final Color colorCard;
   final String symbolCard;
   bool isFlipped;
+  final bool flipOnTouch;
   late final FlipCardController _controllerFlipCard;
   CardPoker({
     super.key,
@@ -16,6 +17,7 @@ class CardPoker extends StatefulWidget {
     required this.colorCard,
     required this.symbolCard,
     this.isFlipped = true,
+    this.flipOnTouch = false,
     FlipCardController? controllerFlipCard,
   }) {
     _controllerFlipCard = controllerFlipCard ?? FlipCardController();
@@ -88,7 +90,7 @@ class _CardPokerState extends State<CardPoker> with WidgetsBindingObserver {
       padding: const EdgeInsets.all(8.0),
       child: FlipCard(
         controller: widget._controllerFlipCard,
-        flipOnTouch: false,
+        flipOnTouch: widget.flipOnTouch,
         direction: FlipDirection.HORIZONTAL,
         front: Card(
           color: Colors.white54.withAlpha(230),

@@ -3,19 +3,7 @@ import 'package:planning_poker/ui/components/card.dart';
 
 class HomeState extends ChangeNotifier {
   String title = 'Planning Poker';
-  List<dynamic> valueCards = [
-    '🃏',
-    1,
-    2,
-    3,
-    5,
-    8,
-    13,
-    21,
-    '?',
-    '☕',
-    '∞',
-  ];
+  List<dynamic> valueCards = ['🃏', 1, 2, 3, 5, 8, 13, 21, '?', '☕', '∞'];
   List<String> symbols = [
     "Planning Poker",
     '♠',
@@ -58,8 +46,14 @@ class HomeState extends ChangeNotifier {
   ];
   late String actualDescriptionCard;
 
-  List<CardPoker> get cardsPoker {
-    return List.generate(valueCards.length, (index) {
+  late List<CardPoker> cardsPoker;
+
+  HomeState() {
+    _initializeCards();
+  }
+
+  void _initializeCards() {
+    cardsPoker = List.generate(valueCards.length, (index) {
       return CardPoker(
         cardValue: valueCards[index],
         colorCard: colorsCards[index],
@@ -79,6 +73,7 @@ class HomeState extends ChangeNotifier {
     // Reset any state variables if needed
     choicedTime = 0;
     actualDescriptionCard = descriptionCardsPlanning[choicedTime];
+    _initializeCards();
     notifyListeners();
   }
 

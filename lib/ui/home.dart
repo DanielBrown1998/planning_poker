@@ -2,7 +2,6 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:planning_poker/ui/components/app_bar_planning_poker.dart';
-// import 'package:planning_poker/ui/components/card.dart';
 import 'package:planning_poker/ui/state/home_state.dart';
 import 'package:provider/provider.dart';
 
@@ -39,11 +38,6 @@ class _HomePageState extends State<HomePage>
     // Add WidgetsBinding observer
     WidgetsBinding.instance.addObserver(this);
     // Animate opacityText after a short delay
-  }
-
-  @override
-  void didUpdateWidget(covariant HomePage oldWidget) {
-    super.didUpdateWidget(oldWidget);
   }
 
   @override
