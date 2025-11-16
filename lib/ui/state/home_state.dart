@@ -31,6 +31,7 @@ class HomeState extends ChangeNotifier {
     Colors.teal,
   ];
   late int choicedTime;
+  late Color colorBase;
   List<String> descriptionCardsPlanning = [
     'Welcome to Planning Poker, select a card to estimate',
     '30 minutes, this is a small task',
@@ -55,51 +56,51 @@ class HomeState extends ChangeNotifier {
   void _initializeCards() {
     cardsPoker = List.generate(valueCards.length, (index) {
       return CardPoker(
+        key: ValueKey<String>('card_${index}_${valueCards[index]}'),
         cardValue: valueCards[index],
         colorCard: colorsCards[index],
         symbolCard: symbols[index],
+        isFlipped: false,
       );
     });
+    initializeState();
   }
 
-  initialize() {
+  initializeState() {
     choicedTime = 0;
     actualDescriptionCard = descriptionCardsPlanning[choicedTime];
     cardsPoker[choicedTime].isFlipped = false;
+    colorBase = colorsCards[choicedTime];
     // notifyListeners();
   }
 
-  void reset() {
+  void resetState() {
     // Reset any state variables if needed
-    choicedTime = 0;
-    actualDescriptionCard = descriptionCardsPlanning[choicedTime];
     _initializeCards();
     notifyListeners();
   }
 
-  void updateBaseTime(dynamic cardValue) {
-    choicedTime = valueCards.indexOf(cardValue);
+  void _updateState(int indexCardPoker) {
+    choicedTime = indexCardPoker;
     actualDescriptionCard = descriptionCardsPlanning[choicedTime];
-    notifyListeners();
+    colorBase = colorsCards[choicedTime];
   }
 
-  Color updateColor(dynamic cardValue) {
-    choicedTime = valueCards.indexOf(cardValue);
-    notifyListeners();
-    return colorsCards[choicedTime];
-  }
+  // _internalFlip(int index) async {
+  //   if (index >= 0 && index < cardsPoker.length) {
+  //     await cardsPoker[index].controllerFlipCard.toggleCard();
+  //     cardsPoker[index].isFlipped = !cardsPoker[index].isFlipped;
+  //   }
+  // }
 
-  void flipAllCards() {
-    for (var card in cardsPoker) {
-      card.isFlipped = !card.isFlipped;
-    }
-    notifyListeners();
-  }
-
-  void flipCardAtIndex(int index) {
-    if (index >= 0 && index < cardsPoker.length) {
-      cardsPoker[index].controllerFlipCard.toggleCard();
-      cardsPoker[index].isFlipped = !cardsPoker[index].isFlipped;
+  void flipCardAtIndex(int toIndex, int fromIndex) async {
+    if ((toIndex >= 0 && toIndex < cardsPoker.length) &&
+        (fromIndex >= 0 && fromIndex < cardsPoker.length)) {
+      // debugPrint("$fromIndex -> $toIndex");
+      // await _internalFlip(fromIndex);
+      // await _internalFlip(toIndex);
+      choicedTime = toIndex;
+      _updateState(choicedTime);
       notifyListeners();
     }
   }

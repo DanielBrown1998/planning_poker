@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:planning_poker/ui/components/lottie.dart';
+// import 'package:planning_poker/ui/components/lottie.dart';
 import 'package:planning_poker/ui/state/home_state.dart';
 import 'package:provider/provider.dart';
 
@@ -33,10 +33,10 @@ class AppBarPlanningPoker extends StatelessWidget
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Flexible(
-                    flex: 2,
-                    child: LottieCard(controller: animationController),
-                  ),
+                  // Flexible(
+                  //   flex: 2,
+                  //   child: LottieCard(controller: animationController),
+                  // ),
                   Flexible(
                     flex: 8,
                     child: FittedBox(

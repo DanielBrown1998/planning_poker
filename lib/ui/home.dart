@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:planning_poker/ui/components/app_bar_planning_poker.dart';
 import 'package:planning_poker/ui/state/home_state.dart';
+import 'package:planning_poker/utils/helpers/sizes_window.dart';
 import 'package:provider/provider.dart';
 
 class HomePage extends StatefulWidget {
@@ -19,7 +20,7 @@ class _HomePageState extends State<HomePage>
   late final CarouselSliderController _carouselController;
   late final AnimationController _animationController;
   late final HomeState homeState;
-  late Color colorBase;
+
   @override
   void initState() {
     super.initState();
@@ -29,12 +30,10 @@ class _HomePageState extends State<HomePage>
 
     // Initialize HomeState
     homeState = context.read<HomeState>();
-    homeState.initialize();
     // Listen to changes in HomeState
     homeState.addListener(() {
       setState(() {});
     });
-    colorBase = homeState.colorsCards[homeState.choicedTime];
     // Add WidgetsBinding observer
     WidgetsBinding.instance.addObserver(this);
     // Animate opacityText after a short delay
@@ -44,15 +43,20 @@ class _HomePageState extends State<HomePage>
   void dispose() {
     super.dispose();
     _animationController.dispose();
-    homeState.removeListener(() {});
+    homeState.removeListener(() {
+      setState(() {});
+    });
     WidgetsBinding.instance.removeObserver(this);
   }
 
   @override
   void reassemble() {
     super.reassemble();
-    homeState.reset();
-    homeState.addListener(() => setState(() {}));
+    homeState.resetState();
+    // ignore: invalid_use_of_protected_member
+    if (!homeState.hasListeners) {
+      homeState.addListener(() => setState(() {}));
+    }
     _animationController.reset();
     _animationController.forward();
   }
@@ -62,7 +66,9 @@ class _HomePageState extends State<HomePage>
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
     final appBarHeight = size.height * 0.2;
-
+    // final widthWindowIsLarge = isLargeWindow(size.width);
+    // final widthWindowIsMedium = isMediumWindow(size.width);
+    final sizeWindow = getSizeWindow(size.width);
     return Scaffold(
       appBar: AppBarPlanningPoker(
         title: FittedBox(
@@ -76,7 +82,7 @@ class _HomePageState extends State<HomePage>
             ),
           ),
         ),
-        colorBase: colorBase,
+        colorBase: homeState.colorBase,
         animationController: _animationController,
         height: appBarHeight,
       ),
@@ -96,9 +102,9 @@ class _HomePageState extends State<HomePage>
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        colorBase.withAlpha(20),
-                        colorBase.withAlpha(50),
-                        colorBase.withAlpha(130),
+                        homeState.colorBase.withAlpha(20),
+                        homeState.colorBase.withAlpha(50),
+                        homeState.colorBase.withAlpha(130),
                       ],
                     ),
                   ),
@@ -126,16 +132,24 @@ class _HomePageState extends State<HomePage>
                           ),
                         );
                       },
-                      child: Text(
-                        homeState.actualDescriptionCard,
-                        //to ensure the AnimatedSwitcher detects changes
-                        key: ValueKey<String>(homeState.actualDescriptionCard),
-                        textAlign: TextAlign.center,
-                        style: theme.textTheme.headlineMedium!.copyWith(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 32,
-                          color: colorBase,
-                          fontFamily: GoogleFonts.rubik().fontFamily,
+                      child: FittedBox(
+                        fit: BoxFit.fitHeight,
+                        child: Text(
+                          homeState.actualDescriptionCard,
+                          //to ensure the AnimatedSwitcher detects changes
+                          key: ValueKey<String>(
+                            homeState.actualDescriptionCard,
+                          ),
+                          textAlign: TextAlign.center,
+                          softWrap: true,
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.headlineMedium!.copyWith(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 32,
+                            color: homeState.colorBase,
+                            fontFamily: GoogleFonts.rubik().fontFamily,
+                          ),
                         ),
                       ),
                     ),
@@ -147,36 +161,56 @@ class _HomePageState extends State<HomePage>
 
                 child: Align(
                   alignment: Alignment.bottomCenter,
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(maxHeight: 500),
-                    child: CarouselSlider(
-                      items: List.generate(homeState.valueCards.length, (
-                        index,
-                      ) {
-                        return homeState.cardsPoker[index];
-                      }),
-                      carouselController: _carouselController,
-                      options: CarouselOptions(
-                        height: size.height * 0.6,
-                        animateToClosest: true,
-                        enlargeCenterPage: true,
-                        enableInfiniteScroll: true,
-                        initialPage: 0,
-                        aspectRatio: 1 / (size.height / size.width),
-                        scrollDirection: Axis.horizontal,
-                        scrollPhysics: const BouncingScrollPhysics(),
-                        autoPlay: false,
-                        onPageChanged: (index, reason) {
-                          homeState.updateBaseTime(
-                            homeState.cardsPoker[index].cardValue,
-                          );
-                          colorBase = homeState.updateColor(
-                            homeState.cardsPoker[index].cardValue,
-                          );
-                          homeState.flipCardAtIndex(index);
-                        },
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    spacing: 0,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.arrow_drop_down_sharp,
+                        color: homeState.colorBase,
+                        size: 35,
                       ),
-                    ),
+                      ConstrainedBox(
+                        constraints: BoxConstraints(
+                          maxHeight: isTall(size.height)
+                              ? 240
+                              : (isMedium(size.height) ? 200 : 160),
+                        ),
+                        child: CarouselSlider(
+                          key: ValueKey<String>('carousel_cards'),
+                          items: List.generate(homeState.valueCards.length, (
+                            index,
+                          ) {
+                            return homeState.cardsPoker[index];
+                          }),
+                          carouselController: _carouselController,
+                          options: CarouselOptions(
+                            height: size.height * 0.625,
+                            animateToClosest: true,
+                            enlargeCenterPage: sizeWindow == SizeWindow.large
+                                ? false
+                                : true,
+                            enableInfiniteScroll: true,
+                            initialPage: 0,
+                            viewportFraction: sizeWindow == SizeWindow.large
+                                ? .11
+                                : (sizeWindow == SizeWindow.medium ? .2 : .35),
+                            aspectRatio: 1 / (size.height / size.width),
+                            scrollDirection: Axis.horizontal,
+                            scrollPhysics: const BouncingScrollPhysics(),
+                            autoPlay: false,
+                            onPageChanged: (index, reason) {
+                              homeState.flipCardAtIndex(
+                                index,
+                                homeState.choicedTime,
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),

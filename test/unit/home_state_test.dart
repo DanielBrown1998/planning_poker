@@ -11,7 +11,7 @@ void main() {
     });
 
     test('initial values are correct', () {
-      homeState.initialize();
+      homeState.initializeState();
       expect(homeState.title, 'Planning Poker');
       expect(homeState.valueCards, [
         '🃏',
@@ -34,7 +34,7 @@ void main() {
     });
 
     test('initialize sets correct values', () {
-      homeState.initialize();
+      homeState.initializeState();
       expect(homeState.choicedTime, 0);
       expect(
         homeState.actualDescriptionCard,
@@ -44,10 +44,10 @@ void main() {
     });
 
     test('reset sets correct values', () {
-      homeState.initialize();
+      homeState.initializeState();
       homeState.choicedTime = 5;
       homeState.actualDescriptionCard = 'Test Description';
-      homeState.reset();
+      homeState.resetState();
       expect(homeState.choicedTime, 0);
       expect(
         homeState.actualDescriptionCard,
@@ -56,8 +56,8 @@ void main() {
     });
 
     test('updateBaseTime updates choicedTime and actualDescriptionCard', () {
-      homeState.initialize();
-      homeState.updateBaseTime(5);
+      homeState.initializeState();
+      homeState.updateState(5);
       expect(homeState.choicedTime, 4);
       expect(
         homeState.actualDescriptionCard,
@@ -66,15 +66,14 @@ void main() {
     });
 
     test('updateColor updates choicedTime and returns correct color', () {
-      homeState.initialize();
+      homeState.initializeState();
       Color color = homeState.updateColor(8);
       expect(homeState.choicedTime, 5);
       expect(color, homeState.colorsCards[5]);
     });
 
-
     test('flipCardAtIndex toggles isFlipped for the specified card', () {
-      homeState.initialize();
+      homeState.initializeState();
       homeState.flipCardAtIndex(2);
       expect(homeState.cardsPoker[2].isFlipped, isFalse);
     });
