@@ -1,7 +1,7 @@
 import 'package:flip_card/flip_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:planning_poker/ui/components/card.dart';
+import 'package:planning_poker/view/components/card.dart';
 
 void main() {
   testWidgets('CardPoker displays correctly and flips', (

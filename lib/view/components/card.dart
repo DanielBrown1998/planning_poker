@@ -9,16 +9,20 @@ class CardPoker extends StatefulWidget {
   final dynamic cardValue;
   final Color colorCard;
   final String symbolCard;
+  final String userName;
   bool isFlipped;
   final bool flipOnTouch;
   late final FlipCardController _controllerFlipCard;
+  final bool inTable;
   CardPoker({
     super.key,
     required this.cardValue,
     required this.colorCard,
     required this.symbolCard,
+    this.userName = "anonymous",
     this.isFlipped = false,
     this.flipOnTouch = false,
+    this.inTable = false,
     FlipCardController? controllerFlipCard,
   }) {
     _controllerFlipCard = controllerFlipCard ?? FlipCardController();
@@ -31,19 +35,19 @@ class CardPoker extends StatefulWidget {
 }
 
 class _CardPokerState extends State<CardPoker> with WidgetsBindingObserver {
-  // _flipCard() {
-  //   if (widget.isFlipped) {
-  //     WidgetsBinding.instance.addPostFrameCallback((_) {
-  //       widget._controllerFlipCard.toggleCard();
-  //     });
-  //   }
-  // }
+  _flipCard() {
+    if (widget.isFlipped) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        widget._controllerFlipCard.toggleCard();
+      });
+    }
+  }
 
   late bool isFlipped;
   @override
   void initState() {
     super.initState();
-    // _flipCard();
+    _flipCard();
     isFlipped = widget.isFlipped;
     WidgetsBinding.instance.addObserver(this);
   }
@@ -53,7 +57,7 @@ class _CardPokerState extends State<CardPoker> with WidgetsBindingObserver {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.isFlipped != widget.isFlipped) {
       isFlipped = widget.isFlipped;
-      // _flipCard();
+      _flipCard();
     }
   }
 
@@ -91,20 +95,23 @@ class _CardPokerState extends State<CardPoker> with WidgetsBindingObserver {
 
   Widget _textWidget(
     String text, {
+    required Key key,
     required ThemeData theme,
     required SizeWindow size,
   }) {
     return FittedBox(
       fit: BoxFit.scaleDown,
-      key: ValueKey<String>('text_$text'),
+      key: key,
       child: Text(
         text,
         style: theme.textTheme.headlineLarge!.copyWith(
           color: widget.colorCard,
           fontWeight: FontWeight.bold,
-          fontSize: size == SizeWindow.large
-              ? 24
-              : (size == SizeWindow.medium ? 20 : 16),
+          fontSize: (!widget.inTable)
+              ? size == SizeWindow.large
+                    ? 20
+                    : (size == SizeWindow.medium ? 16 : 12)
+              : 10,
         ),
       ),
     );
@@ -116,17 +123,17 @@ class _CardPokerState extends State<CardPoker> with WidgetsBindingObserver {
     final size = MediaQuery.of(context).size;
     final sizeWindow = getSizeWindow(size.width);
     return ConstrainedBox(
-      constraints: BoxConstraints(
-        maxWidth: 4 * 84,
-        maxHeight: 4 * 150,
-      ),
+      constraints: BoxConstraints(maxWidth: 4 * 84, maxHeight: 4 * 150),
       child: Padding(
         padding: const EdgeInsets.all(8.0),
         child: FlipCard(
+          key: ValueKey('FlipCard_${widget.cardValue}'),
           controller: widget._controllerFlipCard,
           flipOnTouch: widget.flipOnTouch,
           direction: FlipDirection.HORIZONTAL,
           front: Card(
+            margin: EdgeInsets.all(0),
+            borderOnForeground: false,
             key: ValueKey('CardFront_${widget.cardValue}'),
             color: Colors.white54.withAlpha(230),
             elevation: 0,
@@ -140,37 +147,55 @@ class _CardPokerState extends State<CardPoker> with WidgetsBindingObserver {
             ),
             child: Stack(
               children: [
-                Positioned(
-                  left: 8,
-                  top: 8,
-                  child: _textWidget(
-                    widget.cardValue.toString(),
-                    size: sizeWindow,
-                    theme: theme,
-                  ),
-                ),
+                (widget.inTable)
+                    ? Positioned(
+                        left: 8,
+                        top: 10,
+                        right: 8,
+                        child: _textWidget(
+                          key: ValueKey('CardUserName_${widget.cardValue}'),
+                          widget.userName,
+                          size: sizeWindow,
+                          theme: theme,
+                        ),
+                      )
+                    : Positioned(
+                        top: 8,
+                        left: 8,
+                        child: _textWidget(
+                          key: ValueKey('CardUserName_${widget.cardValue}'),
+                          widget.cardValue.toString(),
+                          size: sizeWindow,
+                          theme: theme,
+                        ),
+                      ),
                 Positioned(
                   left: 8,
                   bottom: 8,
                   child: _textWidget(
+                    key: ValueKey('CardValue_${widget.cardValue}_1'),
                     widget.cardValue.toString(),
                     size: sizeWindow,
                     theme: theme,
                   ),
                 ),
-                Positioned(
-                  right: 8,
-                  top: 8,
-                  child: _textWidget(
-                    widget.cardValue.toString(),
-                    size: sizeWindow,
-                    theme: theme,
-                  ),
-                ),
+                (!widget.inTable)
+                    ? Positioned(
+                        right: 8,
+                        top: 8,
+                        child: _textWidget(
+                          key: ValueKey('CardValue_${widget.cardValue}_2'),
+                          widget.cardValue.toString(),
+                          size: sizeWindow,
+                          theme: theme,
+                        ),
+                      )
+                    : SizedBox.shrink(),
                 Positioned(
                   right: 8,
                   bottom: 8,
                   child: _textWidget(
+                    key: ValueKey('CardValue_${widget.cardValue}_3'),
                     widget.cardValue.toString(),
                     size: sizeWindow,
                     theme: theme,
@@ -179,15 +204,17 @@ class _CardPokerState extends State<CardPoker> with WidgetsBindingObserver {
                 Align(
                   alignment: Alignment.center,
                   child: FittedBox(
-                    fit: BoxFit.fill,
+                    fit: BoxFit.scaleDown,
+                    alignment: AlignmentGeometry.center,
                     child: Text(
                       '${widget.cardValue}',
                       style: theme.textTheme.headlineMedium!.copyWith(
                         color: widget.colorCard,
                         fontWeight: FontWeight.bold,
-                        fontFamily:
-                            GoogleFonts.playfairDisplay().fontFamily,
-                        fontSize: size.height * 0.1,
+                        fontFamily: GoogleFonts.playfairDisplay().fontFamily,
+                        fontSize: (widget.inTable)
+                            ? size.width * 0.1
+                            : size.height * 0.1,
                       ),
                     ),
                   ),
@@ -207,20 +234,20 @@ class _CardPokerState extends State<CardPoker> with WidgetsBindingObserver {
                 style: BorderStyle.solid,
               ),
             ),
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.all(18.0),
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    widget.symbolCard,
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.headlineLarge!.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: GoogleFonts.playfairDisplay().fontFamily,
-                      fontSize: size.height * 0.05,
-                    ),
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  widget.symbolCard,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.headlineLarge!.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: GoogleFonts.playfairDisplay().fontFamily,
+                    fontSize: (widget.inTable)
+                        ? size.width * .25
+                        : size.height * 0.15,
                   ),
                 ),
               ),

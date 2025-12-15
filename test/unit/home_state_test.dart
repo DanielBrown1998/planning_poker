@@ -1,13 +1,13 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:planning_poker/ui/state/home_state.dart';
+import 'package:planning_poker/viewmodel/home_viewmodel.dart';
 import 'package:flutter/material.dart';
 
 void main() {
   group('HomeState', () {
-    late HomeState homeState;
+    late HomeViewModel homeState;
 
     setUp(() {
-      homeState = HomeState();
+      homeState = HomeViewModel();
     });
 
     test('initial values are correct', () {
@@ -40,7 +40,7 @@ void main() {
         homeState.actualDescriptionCard,
         homeState.descriptionCardsPlanning[0],
       );
-      expect(homeState.cardsPoker[0].isFlipped, isFalse);
+      expect(homeState.optionsCardsPoker[0].isFlipped, isFalse);
     });
 
     test('reset sets correct values', () {
@@ -75,7 +75,7 @@ void main() {
     test('flipCardAtIndex toggles isFlipped for the specified card', () {
       homeState.initializeState();
       homeState.flipCardAtIndex(2);
-      expect(homeState.cardsPoker[2].isFlipped, isFalse);
+      expect(homeState.optionsCardsPoker[2].isFlipped, isFalse);
     });
   });
 }

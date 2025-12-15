@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 // import 'package:planning_poker/ui/components/lottie.dart';
-import 'package:planning_poker/ui/state/home_state.dart';
+import 'package:planning_poker/viewmodel/home_viewmodel.dart';
 import 'package:provider/provider.dart';
 
 class AppBarPlanningPoker extends StatelessWidget
@@ -27,7 +27,7 @@ class AppBarPlanningPoker extends StatelessWidget
         top: true,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8.0),
-          child: Consumer<HomeState>(
+          child: Consumer<HomeViewModel>(
             builder: (context, homeState, child) {
               return Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,

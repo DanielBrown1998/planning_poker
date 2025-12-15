@@ -1,12 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:planning_poker/ui/home.dart';
-import 'package:planning_poker/ui/state/home_state.dart';
+import 'package:planning_poker/repository/partners_choices_repository.dart';
+import 'package:planning_poker/view/home.dart';
+import 'package:planning_poker/viewmodel/home_viewmodel.dart';
 import 'package:provider/provider.dart';
 
 void main() {
   runApp(
-    ChangeNotifierProvider(
-      create: (context) => HomeState(),
+    MultiProvider(
+      providers: [
+        Provider<PartnersChoicesRepository>(
+          create: (context) => PartnersChoicesRepository(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => HomeViewModel(
+            partnersChoicesRepository: context
+                .read<PartnersChoicesRepository>(),
+          ),
+        ),
+      ],
       child: const MyApp(),
     ),
   );
