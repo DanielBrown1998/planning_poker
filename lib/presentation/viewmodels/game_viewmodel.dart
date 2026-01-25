@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:planning_poker/presentation/commands/session_commands.dart';
 
 import '../../core/constants/poker_cards.dart';
 import '../../domain/entities/entities.dart';
@@ -18,7 +19,6 @@ class GameViewModel extends ChangeNotifier {
   Session? _session;
   Player? _currentPlayer;
   String? _selectedCard;
-  bool _isLoading = false;
   String? _error;
 
   GameViewModel({
@@ -37,7 +37,6 @@ class GameViewModel extends ChangeNotifier {
   Session? get session => _session;
   Player? get currentPlayer => _currentPlayer;
   String? get selectedCard => _selectedCard;
-  bool get isLoading => _isLoading;
   String? get error => _error;
   bool get hasError => _error != null;
 
@@ -45,7 +44,7 @@ class GameViewModel extends ChangeNotifier {
 
   bool get isHost => _currentPlayer?.id == _session?.hostId;
 
-  bool get isRevealed => _session?.state == SessionState.revealed;
+  bool get isRevealed => _session?.state == GameState.revealed;
 
   bool get canReveal => _session?.canReveal ?? false;
 
@@ -66,6 +65,9 @@ class GameViewModel extends ChangeNotifier {
 
   /// Initializes the view model with session and player data
   void initialize(Session session, Player player) {
+    debugPrint(
+      '🚀 initialize chamado - session: ${session.id}, player: ${player.id}',
+    );
     _session = session;
     _currentPlayer = player;
     _startWatchingSession();
@@ -73,13 +75,18 @@ class GameViewModel extends ChangeNotifier {
   }
 
   void _startWatchingSession() {
+    debugPrint('👂 _startWatchingSession chamado - session: ${_session?.id}');
     if (_session == null) return;
 
     _sessionSubscription?.cancel();
+    debugPrint('🔌 Iniciando listener do stream para session: ${_session!.id}');
     _sessionSubscription = _watchSessionUseCase
         .execute(_session!.id)
         .listen(
           (session) {
+            debugPrint(
+              '📡 Stream recebeu update - playedCards: ${session?.playedCards.keys.toList()}',
+            );
             if (session == null) {
               // Session was deleted
               _error = 'A sessão foi encerrada';
@@ -97,14 +104,19 @@ class GameViewModel extends ChangeNotifier {
             notifyListeners();
           },
           onError: (error) {
+            debugPrint('❌ Stream ERROR: $error');
             _error = error.toString();
             notifyListeners();
+          },
+          onDone: () {
+            debugPrint('🏁 Stream DONE/CLOSED');
           },
         );
   }
 
   /// Selects a card (but doesn't play it yet)
   void selectCard(String card) {
+    print('🎴 selectCard chamado: $card');
     _selectedCard = card;
     notifyListeners();
 
@@ -114,105 +126,82 @@ class GameViewModel extends ChangeNotifier {
 
   /// Plays the selected card
   Future<void> playSelectedCard() async {
+    debugPrint(
+      '🃏 playSelectedCard chamado - card: $_selectedCard, session: ${_session?.id}, player: ${_currentPlayer?.id}',
+    );
     if (_selectedCard == null || _session == null || _currentPlayer == null) {
+      debugPrint('❌ playSelectedCard retornou cedo - dados nulos');
       return;
     }
 
-    _isLoading = true;
-    notifyListeners();
-
-    final result = await _playCardUseCase.execute(
+    final command = PlayCardCommand(
+      useCase: _playCardUseCase,
       sessionId: _session!.id,
       playerId: _currentPlayer!.id,
       playerName: _currentPlayer!.name,
       cardValue: _selectedCard!,
     );
 
-    result.when(
-      success: (_) {
-        _isLoading = false;
-        notifyListeners();
-      },
-      failure: (message) {
-        _error = message;
-        _isLoading = false;
-        notifyListeners();
-      },
+    await command.execute();
+    debugPrint(
+      '✅ playCard executado - hasError: ${command.hasError}, error: ${command.error}',
     );
+
+    // O Command já gerencia loading/error internamente
+    if (command.hasError) {
+      _error = command.error;
+    }
+    notifyListeners();
   }
 
   /// Reveals all cards (host only)
   Future<void> revealCards() async {
     if (_session == null || !isHost) return;
 
-    _isLoading = true;
-    notifyListeners();
-
-    final result = await _revealCardsUseCase.execute(_session!.id);
-
-    result.when(
-      success: (_) {
-        _isLoading = false;
-        notifyListeners();
-      },
-      failure: (message) {
-        _error = message;
-        _isLoading = false;
-        notifyListeners();
-      },
+    final command = RevealCardsCommand(
+      useCase: _revealCardsUseCase,
+      sessionId: _session!.id,
     );
+
+    await command.execute();
+
+    if (command.hasError) {
+      _error = command.error;
+    }
+    notifyListeners();
   }
 
   /// Resets the round (host only)
   Future<void> resetRound() async {
     if (_session == null || !isHost) return;
 
-    _isLoading = true;
-    _selectedCard = null;
-    notifyListeners();
-
-    final result = await _resetRoundUseCase.execute(_session!.id);
-
-    result.when(
-      success: (_) {
-        _isLoading = false;
-        notifyListeners();
-      },
-      failure: (message) {
-        _error = message;
-        _isLoading = false;
-        notifyListeners();
-      },
+    final command = ResetRoundCommand(
+      useCase: _resetRoundUseCase,
+      sessionId: _session!.id,
     );
+    await command.execute();
+
+    if (command.hasError) {
+      _error = command.error;
+    }
+    notifyListeners();
   }
 
   /// Leaves the session
   Future<void> leaveSession() async {
     if (_session == null || _currentPlayer == null) return;
 
-    _isLoading = true;
-    notifyListeners();
-
-    final result = await _leaveSessionUseCase.execute(
+    final command = LeaveSessionCommand(
+      useCase: _leaveSessionUseCase,
       sessionId: _session!.id,
       playerId: _currentPlayer!.id,
     );
 
-    result.when(
-      success: (_) {
-        _sessionSubscription?.cancel();
-        _session = null;
-        _currentPlayer = null;
-        _selectedCard = null;
-        _isLoading = false;
-        notifyListeners();
-      },
-      failure: (message) {
-        _error = message;
-        _isLoading = false;
-        notifyListeners();
-      },
-    );
+    await command.execute();
+    if (command.hasError) {
+      _error = command.error;
+    }
+    notifyListeners();
   }
 
   void clearError() {

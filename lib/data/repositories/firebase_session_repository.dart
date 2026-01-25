@@ -29,7 +29,7 @@ class FirebaseSessionRepository implements SessionRepository {
       sessionKey: sessionKey,
       hostId: host.id,
       name: name,
-      state: SessionState.voting,
+      state: GameState.voting,
       players: [host.copyWith(isHost: true)],
       playedCards: {},
       createdAt: DateTime.now(),
@@ -113,7 +113,7 @@ class FirebaseSessionRepository implements SessionRepository {
 
   @override
   Future<void> revealCards(String sessionId) async {
-    await _dataSource.updateSessionState(sessionId, SessionState.revealed);
+    await _dataSource.updateSessionState(sessionId, GameState.revealed);
   }
 
   @override

@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "792437343714",
+    "firebase_url": "https://planning-poker-7a6b4-default-rtdb.firebaseio.com",
+    "project_id": "planning-poker-7a6b4",
+    "storage_bucket": "planning-poker-7a6b4.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:792437343714:android:b6993c284c9053f67f25bb",
+        "android_client_info": {
+          "package_name": "com.example.planning_poker"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDG9iPb_DxsKDLFQeRX3eQkpZDk5zAkQv8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

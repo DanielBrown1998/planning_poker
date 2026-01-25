@@ -1,5 +1,9 @@
+// home_viewmodel.dart
+
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:planning_poker/presentation/commands/session_commands.dart';
+import 'package:planning_poker/presentation/state/session_state.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../domain/entities/entities.dart';
@@ -11,37 +15,35 @@ class HomeViewModel extends ChangeNotifier {
   final JoinSessionUseCase _joinSessionUseCase;
   final Uuid _uuid;
 
-  bool _isLoading = false;
-  String? _error;
-  Session? _currentSession;
+  late SessionState _state;
   Player? _currentPlayer;
-
   HomeViewModel({
     required CreateSessionUseCase createSessionUseCase,
     required JoinSessionUseCase joinSessionUseCase,
     Uuid? uuid,
   }) : _createSessionUseCase = createSessionUseCase,
        _joinSessionUseCase = joinSessionUseCase,
-       _uuid = uuid ?? const Uuid();
+       _uuid = uuid ?? const Uuid(),
+       _state = SessionInitial();
 
-  bool get isLoading => _isLoading;
-  String? get error => _error;
-  Session? get currentSession => _currentSession;
+  // Expõe o estado da session
   Player? get currentPlayer => _currentPlayer;
-  bool get hasError => _error != null;
-
-  void _setLoading(bool loading) {
-    _isLoading = loading;
-    notifyListeners();
-  }
-
-  void _setError(String? error) {
-    _error = error;
-    notifyListeners();
-  }
+  SessionState get state => _state;
+  // Getters delegados para facilitar uso na UI
+  bool get isLoading => _state is SessionWaiting;
+  bool get hasError => _state is SessionError;
+  String? get error =>
+      _state is SessionError ? (_state as SessionError).message : null;
+  bool get hasActiveSession => _state is SessionActive;
 
   void clearError() {
-    _error = null;
+    if (_state is SessionError) {
+      emit(SessionInitial());
+    }
+  }
+
+  void emit(SessionState state) {
+    _state = state;
     notifyListeners();
   }
 
@@ -50,33 +52,26 @@ class HomeViewModel extends ChangeNotifier {
     required String sessionName,
     required String playerName,
   }) async {
-    _setLoading(true);
-    _setError(null);
+    emit(SessionWaiting());
 
     try {
       final player = Player(id: _uuid.v4(), name: playerName, isHost: true);
-
-      final result = await _createSessionUseCase.execute(
+      final result = await CreateSessionCommand(
+        useCase: _createSessionUseCase,
         sessionName: sessionName,
         host: player,
-      );
+      ).execute();
 
-      return result.when(
-        success: (session) {
-          _currentSession = session;
-          _currentPlayer = player;
-          _setLoading(false);
-          return true;
-        },
-        failure: (message) {
-          _setError(message);
-          _setLoading(false);
-          return false;
-        },
-      );
+      if (result != null) {
+        _currentPlayer = player;
+        emit(SessionActive(result));
+        return true;
+      } else {
+        emit(SessionError('Failed to create session'));
+        return false;
+      }
     } catch (e) {
-      _setError(e.toString());
-      _setLoading(false);
+      emit(SessionError(e.toString()));
       return false;
     }
   }
@@ -86,42 +81,33 @@ class HomeViewModel extends ChangeNotifier {
     required String sessionKey,
     required String playerName,
   }) async {
-    _setLoading(true);
-    _setError(null);
+    emit(SessionWaiting());
 
     try {
       final player = Player(id: _uuid.v4(), name: playerName, isHost: false);
 
-      final result = await _joinSessionUseCase.execute(
-        sessionKey: sessionKey.toUpperCase(),
+      final result = await JoinSessionCommand(
+        useCase: _joinSessionUseCase,
+        sessionKey: sessionKey,
         player: player,
-      );
+      ).execute();
 
-      return result.when(
-        success: (session) {
-          _currentSession = session;
-          _currentPlayer = player;
-          _setLoading(false);
-          return true;
-        },
-        failure: (message) {
-          _setError(message);
-          _setLoading(false);
-          return false;
-        },
-      );
+      if (result != null) {
+        _currentPlayer = player;
+        emit(SessionActive(result));
+        return true;
+      } else {
+        emit(SessionError('Failed to join session'));
+        return false;
+      }
     } catch (e) {
-      _setError(e.toString());
-      _setLoading(false);
+      emit(SessionError(e.toString()));
       return false;
     }
   }
 
   void reset() {
-    _currentSession = null;
     _currentPlayer = null;
-    _error = null;
-    _isLoading = false;
-    notifyListeners();
+    emit(SessionInitial());
   }
 }

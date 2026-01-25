@@ -73,7 +73,7 @@ class FirebaseSessionDataSource {
   }
 
   /// Updates session state
-  Future<void> updateSessionState(String sessionId, SessionState state) async {
+  Future<void> updateSessionState(String sessionId, GameState state) async {
     await _sessionsRef.child(sessionId).child('state').set(state.name);
   }
 
@@ -81,7 +81,7 @@ class FirebaseSessionDataSource {
   Future<void> clearPlayedCards(String sessionId) async {
     await _sessionsRef.child(sessionId).child('playedCards').remove();
 
-    await updateSessionState(sessionId, SessionState.voting);
+    await updateSessionState(sessionId, GameState.voting);
   }
 
   /// Deletes a session
@@ -92,7 +92,11 @@ class FirebaseSessionDataSource {
 
   /// Watches a session for real-time updates
   Stream<Session?> watchSession(String sessionId) {
+    print('🔥 Firebase watchSession chamado para: $sessionId');
     return _sessionsRef.child(sessionId).onValue.map((event) {
+      print(
+        '🔥 Firebase onValue recebeu evento - exists: ${event.snapshot.exists}',
+      );
       if (!event.snapshot.exists || event.snapshot.value == null) {
         return null;
       }

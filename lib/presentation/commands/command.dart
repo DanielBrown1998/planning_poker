@@ -2,11 +2,11 @@ import 'package:flutter/foundation.dart';
 
 /// Base interface for all commands in the application
 abstract class Command<T> {
-  Future<T> execute();
+  Future<T?> execute();
 }
 
 /// Command that can be observed for loading state and errors
-class ObservableCommand<T> extends ChangeNotifier {
+class ObservableCommand<T> extends ChangeNotifier implements Command<T> {
   final Future<T> Function() _action;
 
   bool _isLoading = false;
@@ -20,6 +20,7 @@ class ObservableCommand<T> extends ChangeNotifier {
   T? get result => _result;
   bool get hasError => _error != null;
 
+  @override
   Future<T?> execute() async {
     _isLoading = true;
     _error = null;

@@ -1,8 +1,10 @@
+// session.dart
+
 import 'player.dart';
 import 'played_card.dart';
 
 /// Represents the current state of a Planning Poker session
-enum SessionState {
+enum GameState {
   waiting, // Waiting for players to join
   voting, // Players are selecting cards
   revealed, // Cards are revealed
@@ -14,10 +16,11 @@ class Session {
   final String sessionKey;
   final String hostId;
   final String name;
-  final SessionState state;
+  final GameState state;
   final List<Player> players;
   final Map<String, PlayedCard> playedCards;
   final DateTime createdAt;
+  final String? errorMessage; // Para armazenar mensagens de erro
 
   const Session({
     required this.id,
@@ -28,6 +31,7 @@ class Session {
     required this.players,
     required this.playedCards,
     required this.createdAt,
+    this.errorMessage,
   });
 
   bool get allPlayersVoted {
@@ -37,25 +41,43 @@ class Session {
 
   bool get canReveal => playedCards.isNotEmpty;
 
-  Session copyWith({
-    String? id,
-    String? sessionKey,
-    String? hostId,
-    String? name,
-    SessionState? state,
-    List<Player>? players,
-    Map<String, PlayedCard>? playedCards,
-    DateTime? createdAt,
-  }) {
+  factory Session.fromJson(Map<String, dynamic> json) {
+    // Firebase retorna players como Map<playerId, playerData>, não como List
+    final playersData = json['players'];
+    List<Player> playersList = [];
+    if (playersData != null) {
+      final playersMap = Map<String, dynamic>.from(playersData as Map);
+      playersList = playersMap.values
+          .map((e) => Player.fromJson(Map<String, dynamic>.from(e as Map)))
+          .toList();
+    }
+
+    // playedCards pode ser null se ninguém jogou ainda
+    final playedCardsData = json['playedCards'];
+    Map<String, PlayedCard> playedCardsMap = {};
+    if (playedCardsData != null) {
+      final cardsMap = Map<String, dynamic>.from(playedCardsData as Map);
+      playedCardsMap = cardsMap.map(
+        (key, value) => MapEntry(
+          key,
+          PlayedCard.fromJson(Map<String, dynamic>.from(value as Map)),
+        ),
+      );
+    }
+
     return Session(
-      id: id ?? this.id,
-      sessionKey: sessionKey ?? this.sessionKey,
-      hostId: hostId ?? this.hostId,
-      name: name ?? this.name,
-      state: state ?? this.state,
-      players: players ?? this.players,
-      playedCards: playedCards ?? this.playedCards,
-      createdAt: createdAt ?? this.createdAt,
+      id: json['id'] as String,
+      sessionKey: json['sessionKey'] as String,
+      hostId: json['hostId'] as String,
+      name: json['name'] as String,
+      state: GameState.values.firstWhere(
+        (e) => e.name == json['state'],
+        orElse: () => GameState.waiting,
+      ),
+      players: playersList,
+      playedCards: playedCardsMap,
+      createdAt: DateTime.parse(json['createdAt'] as String),
+      errorMessage: json['errorMessage'] as String?,
     );
   }
 
@@ -66,39 +88,39 @@ class Session {
       'hostId': hostId,
       'name': name,
       'state': state.name,
+      // Salva players como Map<playerId, playerData> para consistência com Firebase
       'players': {for (var p in players) p.id: p.toJson()},
-      'playedCards': playedCards.map((k, v) => MapEntry(k, v.toJson())),
+      'playedCards': playedCards.map(
+        (key, value) => MapEntry(key, value.toJson()),
+      ),
       'createdAt': createdAt.toIso8601String(),
+      if (errorMessage != null) 'errorMessage': errorMessage,
     };
   }
 
-  factory Session.fromJson(Map<String, dynamic> json) {
-    final playersMap = json['players'] as Map<dynamic, dynamic>? ?? {};
-    final cardsMap = json['playedCards'] as Map<dynamic, dynamic>? ?? {};
-
+  Session copyWith({
+    String? id,
+    String? sessionKey,
+    String? hostId,
+    String? name,
+    GameState? state,
+    List<Player>? players,
+    Map<String, PlayedCard>? playedCards,
+    DateTime? createdAt,
+    String? errorMessage,
+  }) {
     return Session(
-      id: json['id'] as String,
-      sessionKey: json['sessionKey'] as String,
-      hostId: json['hostId'] as String,
-      name: json['name'] as String,
-      state: SessionState.values.firstWhere(
-        (e) => e.name == json['state'],
-        orElse: () => SessionState.waiting,
-      ),
-      players: playersMap.entries
-          .map((e) => Player.fromJson(Map<String, dynamic>.from(e.value)))
-          .toList(),
-      playedCards: cardsMap.map(
-        (k, v) => MapEntry(
-          k.toString(),
-          PlayedCard.fromJson(Map<String, dynamic>.from(v)),
-        ),
-      ),
-      createdAt: DateTime.parse(json['createdAt'] as String),
+      id: id ?? this.id,
+      sessionKey: sessionKey ?? this.sessionKey,
+      hostId: hostId ?? this.hostId,
+      name: name ?? this.name,
+      state: state ?? this.state,
+      players: players ?? this.players,
+      playedCards: playedCards ?? this.playedCards,
+      createdAt: createdAt ?? this.createdAt,
+      errorMessage: errorMessage,
     );
   }
 
-  @override
-  String toString() =>
-      'Session(id: $id, sessionKey: $sessionKey, name: $name, state: $state, players: ${players.length})';
+  // ... resto do toJson/fromJson
 }

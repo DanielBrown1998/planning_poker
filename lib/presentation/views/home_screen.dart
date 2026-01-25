@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:planning_poker/presentation/state/session_state.dart';
 import 'package:provider/provider.dart';
 
 import '../viewmodels/home_viewmodel.dart';
@@ -141,7 +142,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: 24),
 
                   // Error message
-                  if (viewModel.hasError)
+                  if (viewModel.state is SessionError)
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
@@ -175,8 +176,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
                   // Action button
                   FilledButton.icon(
-                    onPressed: viewModel.isLoading ? null : _onSubmit,
-                    icon: viewModel.isLoading
+                    onPressed: viewModel.state is SessionLoading
+                        ? null
+                        : _onSubmit,
+                    icon: viewModel.state is SessionLoading
                         ? const SizedBox(
                             width: 20,
                             height: 20,
@@ -216,7 +219,8 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     if (success && mounted) {
-      final session = viewModel.currentSession!;
+      if (viewModel.state is! SessionActive) return;
+      final session = (viewModel.state as SessionActive).session;
       final player = viewModel.currentPlayer!;
 
       Navigator.of(context)
