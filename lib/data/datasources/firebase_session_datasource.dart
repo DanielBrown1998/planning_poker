@@ -1,4 +1,5 @@
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/foundation.dart';
 import '../../domain/entities/entities.dart';
 
 /// Data source for Firebase Realtime Database operations
@@ -92,9 +93,9 @@ class FirebaseSessionDataSource {
 
   /// Watches a session for real-time updates
   Stream<Session?> watchSession(String sessionId) {
-    print('🔥 Firebase watchSession chamado para: $sessionId');
+    debugPrint('🔥 Firebase watchSession chamado para: $sessionId');
     return _sessionsRef.child(sessionId).onValue.map((event) {
-      print(
+      debugPrint(
         '🔥 Firebase onValue recebeu evento - exists: ${event.snapshot.exists}',
       );
       if (!event.snapshot.exists || event.snapshot.value == null) {

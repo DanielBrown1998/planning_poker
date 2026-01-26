@@ -116,7 +116,7 @@ class GameViewModel extends ChangeNotifier {
 
   /// Selects a card (but doesn't play it yet)
   void selectCard(String card) {
-    print('🎴 selectCard chamado: $card');
+    debugPrint('🎴 selectCard chamado: $card');
     _selectedCard = card;
     notifyListeners();
 

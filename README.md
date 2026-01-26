@@ -400,22 +400,52 @@ docs/diagrams/
 └── images/       # Imagens geradas (.png)
 ```
 
-### Diagramas Disponíveis
+### Visão Geral da Arquitetura
 
-| Arquivo | Descrição |
-|---------|-----------|
-| `architecture_overview` | Visão geral da arquitetura |
-| `domain_entities` | Entidades do domínio |
-| `presentation_layer` | Camada de apresentação |
-| `data_layer` | Camada de dados |
-| `use_cases` | Casos de uso |
-| `flow_create_session` | Fluxo de criar sessão |
-| `flow_play_card` | Fluxo de jogar carta |
-| `flow_realtime_sync` | Sincronização em tempo real |
-| `state_home` | Máquina de estados Home |
-| `state_game` | Máquina de estados Game |
-| `dependency_injection` | Fluxo de DI |
-| `folder_structure` | Estrutura de pastas |
+![Architecture Overview](docs/diagrams/images/architecture_overview.png)
+
+### Entidades do Domínio
+
+![Domain Entities](docs/diagrams/images/domain_entities.png)
+
+### Camada de Apresentação
+
+![Presentation Layer](docs/diagrams/images/presentation_layer.png)
+
+### Camada de Dados
+
+![Data Layer](docs/diagrams/images/data_layer.png)
+
+### Casos de Uso
+
+![Use Cases](docs/diagrams/images/use_cases.png)
+
+### Fluxos
+
+#### Criar Sessão
+![Flow Create Session](docs/diagrams/images/flow_create_session.png)
+
+#### Jogar Carta
+![Flow Play Card](docs/diagrams/images/flow_play_card.png)
+
+#### Sincronização em Tempo Real
+![Flow Realtime Sync](docs/diagrams/images/flow_realtime_sync.png)
+
+### Máquinas de Estado
+
+#### Home Screen
+![State Home](docs/diagrams/images/state_home.png)
+
+#### Game Screen
+![State Game](docs/diagrams/images/state_game.png)
+
+### Injeção de Dependência
+
+![Dependency Injection](docs/diagrams/images/dependency_injection.png)
+
+### Estrutura de Pastas
+
+![Folder Structure](docs/diagrams/images/folder_structure.png)
 
 ### Gerando Imagens dos Diagramas
 
