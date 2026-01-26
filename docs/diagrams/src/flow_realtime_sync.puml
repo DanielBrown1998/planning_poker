@@ -1,0 +1,85 @@
+@startuml flow_realtime_sync
+
+!theme plain
+skinparam backgroundColor #FEFEFE
+
+title Planning Poker - Sincronização em Tempo Real
+
+actor "Player A\n(Host)" as PlayerA
+actor "Player B" as PlayerB
+participant "GameViewModel A" as VMA
+participant "GameViewModel B" as VMB
+participant "WatchSessionUseCase" as UC
+participant "FirebaseSessionDataSource" as DS
+database "Firebase\nRealtime Database" as FB
+
+== Inicialização ==
+
+PlayerA -> VMA : initialize(session, player)
+activate VMA
+VMA -> UC : execute(sessionId)
+UC -> DS : watchSession(sessionId)
+DS -> FB : sessionsRef.child(id).onValue
+FB --> DS : Stream<DatabaseEvent>
+DS --> VMA : Stream<Session?>
+VMA -> VMA : _sessionSubscription.listen()
+deactivate VMA
+
+PlayerB -> VMB : initialize(session, player)
+activate VMB
+VMB -> UC : execute(sessionId)
+UC -> DS : watchSession(sessionId)
+DS -> FB : sessionsRef.child(id).onValue
+FB --> DS : Stream<DatabaseEvent>
+DS --> VMB : Stream<Session?>
+VMB -> VMB : _sessionSubscription.listen()
+deactivate VMB
+
+== Player B joga uma carta ==
+
+PlayerB -> VMB : selectCard("5")
+activate VMB
+VMB -> FB : playedCards/{playerB.id}.set(...)
+deactivate VMB
+
+FB -> FB : Dados atualizados
+
+note over FB #FFECB3
+  Firebase notifica todos
+  os listeners ativos
+end note
+
+FB --> DS : onValue event (to all listeners)
+
+DS --> VMA : Session updated
+activate VMA
+VMA -> VMA : _session = newSession
+VMA --> PlayerA : notifyListeners()\n→ UI mostra carta de B
+deactivate VMA
+
+DS --> VMB : Session updated  
+activate VMB
+VMB -> VMB : _session = newSession
+VMB --> PlayerB : notifyListeners()\n→ UI confirma carta jogada
+deactivate VMB
+
+== Host revela cartas ==
+
+PlayerA -> VMA : revealCards()
+activate VMA
+VMA -> FB : state = "revealed"
+deactivate VMA
+
+FB --> DS : onValue event
+
+DS --> VMA : Session(state: revealed)
+activate VMA
+VMA --> PlayerA : Cartas reveladas!
+deactivate VMA
+
+DS --> VMB : Session(state: revealed)
+activate VMB
+VMB --> PlayerB : Cartas reveladas!
+deactivate VMB
+
+@enduml

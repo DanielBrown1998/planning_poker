@@ -1,0 +1,61 @@
+@startuml domain_entities
+
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam classAttributeIconSize 0
+
+title Planning Poker - Domain Entities
+
+enum GameState {
+    waiting
+    voting
+    revealed
+}
+
+class Session {
+    +String id
+    +String sessionKey
+    +String hostId
+    +String name
+    +GameState state
+    +List<Player> players
+    +Map<String, PlayedCard> playedCards
+    +DateTime createdAt
+    +String? errorMessage
+    --
+    +bool allPlayersVoted
+    +bool canReveal
+    --
+    +Session.fromJson(Map<String, dynamic>)
+    +Map<String, dynamic> toJson()
+    +Session copyWith(...)
+}
+
+class Player {
+    +String id
+    +String name
+    +bool isHost
+    --
+    +Player.fromJson(Map<String, dynamic>)
+    +Map<String, dynamic> toJson()
+    +Player copyWith(...)
+}
+
+class PlayedCard {
+    +String playerId
+    +String playerName
+    +String? cardValue
+    +DateTime playedAt
+    --
+    +bool hasPlayed
+    --
+    +PlayedCard.fromJson(Map<String, dynamic>)
+    +Map<String, dynamic> toJson()
+    +PlayedCard copyWith(...)
+}
+
+Session "1" *-- "*" Player : contains
+Session "1" *-- "*" PlayedCard : contains
+Session --> GameState : has state
+
+@enduml

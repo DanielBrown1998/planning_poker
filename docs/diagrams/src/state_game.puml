@@ -1,0 +1,46 @@
+@startuml state_game
+
+!theme plain
+skinparam backgroundColor #FEFEFE
+
+title Planning Poker - GameScreenState Machine
+
+[*] --> GameScreenLoading : initialize()
+
+GameScreenLoading --> GameScreenActive : Session carregada\nvia Stream
+GameScreenLoading : Spinner de loading
+GameScreenLoading : Aguardando dados
+
+state GameScreenActive {
+    [*] --> Voting
+    
+    Voting : state == GameState.voting
+    Voting : Jogadores selecionam cartas
+    Voting : Cartas ficam ocultas
+    
+    Voting --> Revealed : revealCards()\n(apenas host)
+    
+    Revealed : state == GameState.revealed
+    Revealed : Todas cartas visíveis
+    Revealed : Mostra estatísticas
+    
+    Revealed --> Voting : resetRound()\n(apenas host)
+}
+
+GameScreenActive --> GameScreenError : Erro no stream\nou operação
+GameScreenActive --> GameScreenSessionEnded : Session deletada\n(host saiu)
+
+GameScreenError --> GameScreenActive : Retry / Error cleared
+GameScreenError : Mostra mensagem de erro
+GameScreenError : lastSession disponível
+
+GameScreenSessionEnded --> [*] : Navega para HomeScreen
+GameScreenSessionEnded : Dialog informativo
+
+note right of GameScreenActive
+  Dentro de Active, o estado
+  é controlado por Session.state
+  (GameState enum do domínio)
+end note
+
+@enduml

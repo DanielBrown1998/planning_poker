@@ -1,0 +1,65 @@
+@startuml data_layer
+
+skinparam backgroundColor #FEFEFE
+skinparam packageStyle rectangle
+
+title Planning Poker - Data Layer
+
+package "Domain Layer" #E8F5E9 {
+    interface SessionRepository {
+        createSession()
+        joinSession()
+        leaveSession()
+        watchSession()
+        getSessionByKey()
+        playCard()
+        revealCards()
+        resetRound()
+        deleteSession()
+    }
+}
+
+package "Data Layer" #FFF3E0 {
+    class FirebaseSessionRepository {
+        dataSource
+        uuid
+        ..
+        createSession()
+        joinSession()
+        leaveSession()
+        watchSession()
+        getSessionByKey()
+        playCard()
+        revealCards()
+        resetRound()
+        deleteSession()
+    }
+    
+    class FirebaseSessionDataSource {
+        database
+        ..
+        sessionsRef
+        sessionKeysRef
+        ..
+        createSession()
+        getSession()
+        getSessionIdByKey()
+        addPlayer()
+        removePlayer()
+        playCard()
+        updateSessionState()
+        clearPlayedCards()
+        watchSession()
+        deleteSession()
+    }
+}
+
+package "External" #FFEBEE {
+    class Firebase << (D,#FF7700) Database >>
+}
+
+FirebaseSessionRepository ..|> SessionRepository
+FirebaseSessionRepository --> FirebaseSessionDataSource
+FirebaseSessionDataSource --> Firebase
+
+@enduml

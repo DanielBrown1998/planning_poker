@@ -1,0 +1,116 @@
+@startuml architecture_overview
+
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam componentStyle rectangle
+
+title Planning Poker - Arquitetura Clean Architecture + MVVM
+
+package "Presentation Layer" #E1F5FE {
+    package "Views" #B3E5FC {
+        [HomeScreen]
+        [GameScreen]
+        [Partials]
+    }
+    
+    package "ViewModels" #81D4FA {
+        [HomeViewModel]
+        [GameViewModel]
+    }
+    
+    package "States" #4FC3F7 {
+        [HomeState]
+        [GameScreenState]
+    }
+    
+    package "Commands" #29B6F6 {
+        [HomeCommands]
+        [GameCommands]
+        [ObservableCommand]
+    }
+}
+
+package "Domain Layer" #E8F5E9 {
+    package "Entities" #C8E6C9 {
+        [Session]
+        [Player]
+        [PlayedCard]
+    }
+    
+    package "Use Cases" #A5D6A7 {
+        [CreateSessionUseCase]
+        [JoinSessionUseCase]
+        [PlayCardUseCase]
+        [RevealCardsUseCase]
+        [ResetRoundUseCase]
+        [LeaveSessionUseCase]
+        [WatchSessionUseCase]
+    }
+    
+    package "Repositories (Interfaces)" #81C784 {
+        [SessionRepository] <<interface>>
+    }
+}
+
+package "Data Layer" #FFF3E0 {
+    package "Repositories (Implementations)" #FFE0B2 {
+        [FirebaseSessionRepository]
+    }
+    
+    package "Data Sources" #FFCC80 {
+        [FirebaseSessionDataSource]
+    }
+}
+
+package "Core" #F3E5F5 {
+    [Result<T>]
+    [DependencyInjection]
+    [SessionKeyGenerator]
+    [PokerCards]
+}
+
+package "External" #FFEBEE {
+    database "Firebase\nRealtime Database" as Firebase
+}
+
+' Relationships - Presentation
+[HomeScreen] --> [HomeViewModel] : watches
+[GameScreen] --> [GameViewModel] : watches
+[HomeViewModel] --> [HomeState] : emits
+[GameViewModel] --> [GameScreenState] : manages
+[HomeViewModel] --> [HomeCommands] : uses
+[GameViewModel] --> [GameCommands] : uses
+[HomeCommands] --> [ObservableCommand] : extends
+[GameCommands] --> [ObservableCommand] : extends
+
+' Relationships - Domain
+[HomeCommands] --> [CreateSessionUseCase]
+[HomeCommands] --> [JoinSessionUseCase]
+[GameCommands] --> [PlayCardUseCase]
+[GameCommands] --> [RevealCardsUseCase]
+[GameCommands] --> [ResetRoundUseCase]
+[GameCommands] --> [LeaveSessionUseCase]
+[GameViewModel] --> [WatchSessionUseCase]
+
+[CreateSessionUseCase] --> [SessionRepository]
+[JoinSessionUseCase] --> [SessionRepository]
+[PlayCardUseCase] --> [SessionRepository]
+[RevealCardsUseCase] --> [SessionRepository]
+[ResetRoundUseCase] --> [SessionRepository]
+[LeaveSessionUseCase] --> [SessionRepository]
+[WatchSessionUseCase] --> [SessionRepository]
+
+' Relationships - Data
+[FirebaseSessionRepository] ..|> [SessionRepository] : implements
+[FirebaseSessionRepository] --> [FirebaseSessionDataSource]
+[FirebaseSessionDataSource] --> Firebase
+
+' Use Cases return Result
+[CreateSessionUseCase] --> [Result<T>]
+
+' DI
+[DependencyInjection] ..> [HomeViewModel] : creates
+[DependencyInjection] ..> [GameViewModel] : creates
+[DependencyInjection] ..> [FirebaseSessionRepository] : creates
+
+@enduml

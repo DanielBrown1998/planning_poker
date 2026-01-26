@@ -1,0 +1,55 @@
+@startuml folder_structure
+
+!theme plain
+skinparam backgroundColor #FEFEFE
+
+title Planning Poker - Estrutura de Pastas
+
+salt
+{
+{T
++ **lib/**
+++ **core/** | Utilitários e configurações compartilhadas
++++ constants/ | Constantes (PokerCards)
++++ di/ | Dependency Injection
++++ result/ | Result<T> pattern
++++ utils/ | Utilitários (SessionKeyGenerator)
+++ **data/** | Camada de Dados
++++ datasources/ | Acesso a dados externos
+++++ firebase_session_datasource.dart
++++ repositories/ | Implementações de repositórios
+++++ firebase_session_repository.dart
+++ **domain/** | Camada de Domínio (regras de negócio)
++++ entities/ | Modelos de domínio
+++++ session.dart
+++++ player.dart
+++++ played_card.dart
++++ repositories/ | Interfaces de repositórios
+++++ session_repository.dart
++++ usecases/ | Casos de uso
+++++ create_session_usecase.dart
+++++ join_session_usecase.dart
+++++ play_card_usecase.dart
+++++ ...
+++ **presentation/** | Camada de Apresentação
++++ commands/ | Command Pattern
+++++ command.dart
+++++ home_commands.dart
+++++ game_commands.dart
++++ state/ | Estados de UI (sealed classes)
+++++ home_state.dart
+++++ game_state.dart
++++ viewmodels/ | ViewModels (ChangeNotifier)
+++++ home_viewmodel.dart
+++++ game_viewmodel.dart
++++ views/ | Telas e widgets
+++++ home_screen.dart
+++++ game_screen.dart
+++++ partials/
++++ widgets/ | Widgets reutilizáveis
+++ main.dart | Entry point
+++ firebase_options.dart | Configuração Firebase
+}
+}
+
+@enduml

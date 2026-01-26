@@ -1,0 +1,91 @@
+@startuml use_cases
+
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam classAttributeIconSize 0
+
+title Planning Poker - Domain Use Cases
+
+package "Core" #F3E5F5 {
+    abstract class Result<T> <<sealed>> {
+        +{static} Result<T> success(T data)
+        +{static} Result<T> failure(String message)
+        +R when<R>(success, failure)
+    }
+    
+    class Success<T> {
+        +T data
+    }
+    
+    class Failure<T> {
+        +String message
+    }
+    
+    Success --|> Result
+    Failure --|> Result
+}
+
+package "Domain" #E8F5E9 {
+    interface SessionRepository <<interface>> {
+    }
+    
+    class CreateSessionUseCase {
+        -SessionRepository _repository
+        --
+        +Future<Result<Session>> execute(sessionName, host)
+    }
+    
+    class JoinSessionUseCase {
+        -SessionRepository _repository
+        --
+        +Future<Result<Session>> execute(sessionKey, player)
+    }
+    
+    class PlayCardUseCase {
+        -SessionRepository _repository
+        --
+        +Future<Result<void>> execute(sessionId, playerId, playerName, cardValue)
+    }
+    
+    class RevealCardsUseCase {
+        -SessionRepository _repository
+        --
+        +Future<Result<void>> execute(sessionId)
+    }
+    
+    class ResetRoundUseCase {
+        -SessionRepository _repository
+        --
+        +Future<Result<void>> execute(sessionId)
+    }
+    
+    class LeaveSessionUseCase {
+        -SessionRepository _repository
+        --
+        +Future<Result<void>> execute(sessionId, playerId)
+    }
+    
+    class WatchSessionUseCase {
+        -SessionRepository _repository
+        --
+        +Stream<Session?> execute(sessionId)
+    }
+}
+
+' Relationships
+CreateSessionUseCase --> SessionRepository
+JoinSessionUseCase --> SessionRepository
+PlayCardUseCase --> SessionRepository
+RevealCardsUseCase --> SessionRepository
+ResetRoundUseCase --> SessionRepository
+LeaveSessionUseCase --> SessionRepository
+WatchSessionUseCase --> SessionRepository
+
+CreateSessionUseCase --> Result : returns
+JoinSessionUseCase --> Result : returns
+PlayCardUseCase --> Result : returns
+RevealCardsUseCase --> Result : returns
+ResetRoundUseCase --> Result : returns
+LeaveSessionUseCase --> Result : returns
+
+@enduml

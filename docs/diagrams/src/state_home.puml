@@ -1,0 +1,32 @@
+@startuml state_home
+
+!theme plain
+skinparam backgroundColor #FEFEFE
+
+title Planning Poker - HomeState Machine
+
+[*] --> HomeInitial : App iniciado
+
+HomeInitial --> HomeLoading : createSession() ou\njoinSession()
+HomeInitial : Aguardando ação do usuário
+HomeInitial : Formulário habilitado
+
+HomeLoading --> HomeSuccess : Sessão criada/entrou\ncom sucesso
+HomeLoading --> HomeError : Falha na operação
+HomeLoading : Loading spinner visível
+HomeLoading : Formulário desabilitado
+
+HomeSuccess --> [*] : Navega para GameScreen
+HomeSuccess : session e player disponíveis
+
+HomeError --> HomeInitial : clearError() ou\nnova tentativa
+HomeError : Mensagem de erro visível
+HomeError : Formulário habilitado
+
+note right of HomeSuccess
+  Após HomeSuccess, a navegação
+  ocorre e reset() é chamado
+  quando retorna de GameScreen
+end note
+
+@enduml

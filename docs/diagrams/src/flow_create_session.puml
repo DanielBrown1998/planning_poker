@@ -1,0 +1,66 @@
+@startuml flow_create_session
+
+!theme plain
+skinparam backgroundColor #FEFEFE
+
+title Planning Poker - Fluxo: Criar Sessão
+
+actor User
+participant "HomeScreen" as View
+participant "HomeViewModel" as VM
+participant "CreateSessionCommand" as Cmd
+participant "CreateSessionUseCase" as UC
+participant "FirebaseSessionRepository" as Repo
+participant "FirebaseSessionDataSource" as DS
+database "Firebase" as FB
+
+User -> View : Preenche formulário\ne clica "Criar Sessão"
+activate View
+
+View -> VM : createSession(\n  sessionName,\n  playerName\n)
+activate VM
+
+VM -> VM : _emit(HomeLoading())
+VM --> View : notifyListeners()
+View --> User : Mostra loading
+
+VM -> VM : Cria Player(isHost: true)
+VM -> Cmd : CreateSessionCommand(\n  useCase,\n  sessionName,\n  host\n)
+activate Cmd
+
+Cmd -> UC : execute(\n  sessionName,\n  host\n)
+activate UC
+
+UC -> Repo : createSession(\n  name,\n  host\n)
+activate Repo
+
+Repo -> Repo : Gera sessionId (UUID)
+Repo -> Repo : Gera sessionKey (6 chars)
+Repo -> Repo : Cria Session object
+
+Repo -> DS : createSession(session)
+activate DS
+
+DS -> FB : sessionsRef.child(id).set(session.toJson())
+DS -> FB : sessionKeysRef.child(key).set(id)
+
+FB --> DS : Success
+deactivate DS
+
+Repo --> UC : Session
+deactivate Repo
+
+UC --> Cmd : Result.success(Session)
+deactivate UC
+
+Cmd --> VM : Session
+deactivate Cmd
+
+VM -> VM : _emit(HomeSuccess(\n  session,\n  player\n))
+VM --> View : notifyListeners()
+deactivate VM
+
+View --> User : Navega para GameScreen
+deactivate View
+
+@enduml

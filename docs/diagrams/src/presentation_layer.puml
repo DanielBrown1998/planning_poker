@@ -1,0 +1,213 @@
+@startuml presentation_layer
+
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam classAttributeIconSize 0
+
+title Planning Poker - Presentation Layer (MVVM + Command Pattern)
+
+package "Views" {
+    class HomeScreen {
+        -GlobalKey<FormState> _formKey
+        -TextEditingController _playerNameController
+        -TextEditingController _sessionNameController
+        -TextEditingController _sessionKeyController
+        -bool _isCreateMode
+        --
+        +Widget build(BuildContext)
+        -Future<void> _onSubmit()
+    }
+    
+    class GameScreen {
+        +Session session
+        +Player player
+        --
+        +Widget build(BuildContext)
+        -void _copySessionKey(String)
+        -void _showLeaveConfirmation(...)
+        -void _showSessionEndedDialog()
+    }
+}
+
+package "ViewModels" {
+    class HomeViewModel <<ChangeNotifier>> {
+        -CreateSessionUseCase _createSessionUseCase
+        -JoinSessionUseCase _joinSessionUseCase
+        -Uuid _uuid
+        -HomeState _state
+        --
+        +HomeState state
+        +bool isLoading
+        +bool hasError
+        +String? error
+        +Session? session
+        +Player? currentPlayer
+        --
+        +Future<bool> createSession(...)
+        +Future<bool> joinSession(...)
+        +void clearError()
+        +void reset()
+        -void _emit(HomeState)
+    }
+    
+    class GameViewModel <<ChangeNotifier>> {
+        -WatchSessionUseCase _watchSessionUseCase
+        -PlayCardUseCase _playCardUseCase
+        -RevealCardsUseCase _revealCardsUseCase
+        -ResetRoundUseCase _resetRoundUseCase
+        -LeaveSessionUseCase _leaveSessionUseCase
+        -StreamSubscription<Session?>? _sessionSubscription
+        -Session? _session
+        -Player? _currentPlayer
+        -String? _selectedCard
+        -String? _error
+        --
+        +Session? session
+        +Player? currentPlayer
+        +String? selectedCard
+        +bool isHost
+        +bool isRevealed
+        +bool canReveal
+        +bool allPlayersVoted
+        +List<String> availableCards
+        --
+        +void initialize(Session, Player)
+        +void selectCard(String)
+        +Future<void> playSelectedCard()
+        +Future<void> revealCards()
+        +Future<void> resetRound()
+        +Future<void> leaveSession()
+        +void clearError()
+    }
+}
+
+package "States" {
+    abstract class HomeState <<sealed>> {
+    }
+    
+    class HomeInitial {
+    }
+    
+    class HomeLoading {
+    }
+    
+    class HomeError {
+        +String message
+    }
+    
+    class HomeSuccess {
+        +Session session
+        +Player player
+    }
+    
+    abstract class GameScreenState <<sealed>> {
+    }
+    
+    class GameScreenLoading {
+    }
+    
+    class GameScreenActive {
+        +Session session
+        +Player currentPlayer
+        +String? selectedCard
+        +GameScreenActive copyWith(...)
+    }
+    
+    class GameScreenError {
+        +String message
+        +Session? lastSession
+        +Player? currentPlayer
+    }
+    
+    class GameScreenSessionEnded {
+    }
+}
+
+package "Commands" {
+    abstract class Command<T> <<interface>> {
+        +Future<T?> execute()
+    }
+    
+    class ObservableCommand<T> <<ChangeNotifier>> {
+        -Future<T> Function() _action
+        -bool _isLoading
+        -String? _error
+        -T? _result
+        --
+        +bool isLoading
+        +String? error
+        +T? result
+        +bool hasError
+        --
+        +Future<T?> execute()
+        +void clearError()
+    }
+    
+    class CreateSessionCommand {
+        +String sessionName
+        +Player host
+    }
+    
+    class JoinSessionCommand {
+        +String sessionKey
+        +Player player
+    }
+    
+    class PlayCardCommand {
+        +String sessionId
+        +String playerId
+        +String playerName
+        +String cardValue
+    }
+    
+    class RevealCardsCommand {
+        +String sessionId
+    }
+    
+    class ResetRoundCommand {
+        +String sessionId
+    }
+    
+    class LeaveSessionCommand {
+        +String sessionId
+        +String playerId
+    }
+}
+
+' State Inheritance
+HomeInitial --|> HomeState
+HomeLoading --|> HomeState
+HomeError --|> HomeState
+HomeSuccess --|> HomeState
+
+GameScreenLoading --|> GameScreenState
+GameScreenActive --|> GameScreenState
+GameScreenError --|> GameScreenState
+GameScreenSessionEnded --|> GameScreenState
+
+' Command Inheritance
+ObservableCommand ..|> Command
+CreateSessionCommand --|> ObservableCommand
+JoinSessionCommand --|> ObservableCommand
+PlayCardCommand --|> ObservableCommand
+RevealCardsCommand --|> ObservableCommand
+ResetRoundCommand --|> ObservableCommand
+LeaveSessionCommand --|> ObservableCommand
+
+' View -> ViewModel relationships
+HomeScreen --> HomeViewModel : watches
+GameScreen --> GameViewModel : watches
+
+' ViewModel -> State relationships
+HomeViewModel --> HomeState : emits
+GameViewModel --> GameScreenState : manages
+
+' ViewModel -> Command relationships
+HomeViewModel --> CreateSessionCommand : uses
+HomeViewModel --> JoinSessionCommand : uses
+GameViewModel --> PlayCardCommand : uses
+GameViewModel --> RevealCardsCommand : uses
+GameViewModel --> ResetRoundCommand : uses
+GameViewModel --> LeaveSessionCommand : uses
+
+@enduml

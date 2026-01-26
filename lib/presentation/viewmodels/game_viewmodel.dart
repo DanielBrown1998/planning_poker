@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
-import 'package:planning_poker/presentation/commands/session_commands.dart';
+import 'package:planning_poker/presentation/commands/game_commands.dart';
 
 import '../../core/constants/poker_cards.dart';
 import '../../domain/entities/entities.dart';

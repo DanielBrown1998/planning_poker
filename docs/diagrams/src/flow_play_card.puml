@@ -1,0 +1,76 @@
+@startuml flow_play_card
+
+!theme plain
+skinparam backgroundColor #FEFEFE
+
+title Planning Poker - Fluxo: Jogar Carta
+
+actor User
+participant "GameScreen" as View
+participant "CardSelectionArea" as Cards
+participant "GameViewModel" as VM
+participant "PlayCardCommand" as Cmd
+participant "PlayCardUseCase" as UC
+participant "FirebaseSessionRepository" as Repo
+participant "FirebaseSessionDataSource" as DS
+database "Firebase" as FB
+
+User -> Cards : Seleciona uma carta
+activate Cards
+
+Cards -> VM : selectCard(cardValue)
+activate VM
+
+VM -> VM : _selectedCard = cardValue
+VM --> Cards : notifyListeners()
+Cards --> User : Carta selecionada (highlight)
+
+VM -> VM : playSelectedCard()
+
+VM -> Cmd : PlayCardCommand(\n  useCase,\n  sessionId,\n  playerId,\n  playerName,\n  cardValue\n)
+activate Cmd
+
+Cmd -> UC : execute(...)
+activate UC
+
+UC -> Repo : playCard(...)
+activate Repo
+
+Repo -> DS : playCard(sessionId, PlayedCard)
+activate DS
+
+DS -> FB : playedCards/{playerId}.set(card.toJson())
+FB --> DS : Success
+deactivate DS
+
+Repo --> UC : void
+deactivate Repo
+
+UC --> Cmd : Result.success(void)
+deactivate UC
+
+Cmd --> VM : void
+deactivate Cmd
+
+deactivate VM
+deactivate Cards
+
+note over FB
+  Firebase dispara evento
+  de atualização
+end note
+
+FB -> DS : onValue event
+activate DS
+
+DS -> DS : Session.fromJson(snapshot)
+DS --> VM : Stream<Session?> emits Session
+
+activate VM
+VM -> VM : _session = session
+VM --> View : notifyListeners()
+deactivate VM
+
+View --> User : UI atualizada com\ncarta jogada visível
+
+@enduml

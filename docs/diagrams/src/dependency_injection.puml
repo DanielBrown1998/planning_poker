@@ -1,0 +1,72 @@
+@startuml dependency_injection
+
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam componentStyle rectangle
+
+title Planning Poker - Dependency Injection Flow
+
+package "main.dart" {
+    component [MyApp] as App
+}
+
+package "DependencyInjection" {
+    component [getProviders()] as DI
+}
+
+package "Data Sources" #FFCC80 {
+    component [FirebaseSessionDataSource] as DataSource
+}
+
+package "Repositories" #FFE0B2 {
+    component [FirebaseSessionRepository] as Repo
+}
+
+package "Use Cases" #A5D6A7 {
+    component [CreateSessionUseCase] as UC1
+    component [JoinSessionUseCase] as UC2
+    component [PlayCardUseCase] as UC3
+    component [RevealCardsUseCase] as UC4
+    component [ResetRoundUseCase] as UC5
+    component [WatchSessionUseCase] as UC6
+    component [LeaveSessionUseCase] as UC7
+}
+
+package "ViewModels" #81D4FA {
+    component [HomeViewModel] as HomeVM
+    component [GameViewModel] as GameVM
+}
+
+package "Provider (Widget Tree)" #E1BEE7 {
+    component [MultiProvider] as Provider
+}
+
+' Creation flow
+DI --> DataSource : creates
+DI --> Repo : creates with DataSource
+DI --> UC1 : creates with Repo
+DI --> UC2 : creates with Repo
+DI --> UC3 : creates with Repo
+DI --> UC4 : creates with Repo
+DI --> UC5 : creates with Repo
+DI --> UC6 : creates with Repo
+DI --> UC7 : creates with Repo
+DI --> HomeVM : creates with UC1, UC2
+DI --> GameVM : creates with UC3-UC7
+
+' Provider registration
+DI --> Provider : List<SingleChildWidget>
+App --> Provider : wraps app
+
+note bottom of DI
+  **Criação manual de dependências:**
+  1. DataSource (Firebase)
+  2. Repository (implementação)
+  3. Use Cases (regras de negócio)
+  4. ViewModels (estado da UI)
+  
+  Tudo registrado via Provider
+  para injeção na árvore de widgets
+end note
+
+@enduml
