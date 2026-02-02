@@ -89,6 +89,7 @@ class GameViewModel extends ChangeNotifier {
             );
             if (session == null) {
               // Session was deleted
+              _session = null;
               _error = 'A sessão foi encerrada';
               notifyListeners();
               return;
