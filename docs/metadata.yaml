@@ -1,0 +1,27 @@
+---
+title: "Documentação Técnica - Planning Poker"
+author: "Daniel Brown"
+date: "Janeiro 2026"
+subject: "Documentação de Software"
+keywords: [Flutter, Clean Architecture, MVVM, Firebase, Planning Poker]
+lang: pt-BR
+titlepage: true
+titlepage-color: "3F51B5"
+titlepage-text-color: "FFFFFF"
+titlepage-rule-color: "FFFFFF"
+titlepage-rule-height: 2
+book: true
+classoption: oneside
+code-block-font-size: \scriptsize
+toc: true
+toc-own-page: true
+colorlinks: true
+linkcolor: blue
+geometry: "left=2.5cm,right=2.5cm,top=2.5cm,bottom=2.5cm"
+header-includes:
+  - \usepackage{fancyhdr}
+  - \pagestyle{fancy}
+  - \fancyhead[L]{Planning Poker}
+  - \fancyhead[R]{Documentação Técnica}
+  - \fancyfoot[C]{\thepage}
+---
