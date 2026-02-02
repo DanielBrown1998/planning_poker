@@ -65,7 +65,7 @@ class PlayersPanel extends StatelessWidget {
     ColorScheme colorScheme,
   ) {
     return Container(
-      // width: 240,
+      width: 240,
       decoration: BoxDecoration(
         color: colorScheme.surfaceContainerLow,
         border: Border(
